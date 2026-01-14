@@ -2,6 +2,7 @@ package cpu
 
 import (
 	"fmt"
+	"runtime"
 
 	ghwPkg "github.com/k8snetworkplumbingwg/sriov-network-operator/pkg/host/internal/lib/ghw"
 	"github.com/k8snetworkplumbingwg/sriov-network-operator/pkg/host/types"
@@ -18,6 +19,9 @@ func New(ghwLib ghwPkg.GHWLib) *cpuInfoProvider {
 }
 
 func (c *cpuInfoProvider) GetCPUVendor() (types.CPUVendor, error) {
+	if runtime.GOARCH == "s390x" {
+		return types.CPUVendorS390X, nil
+	}
 	cpuInfo, err := c.ghwLib.CPU()
 	if err != nil {
 		return -1, fmt.Errorf("can't retrieve the CPU vendor: %w", err)
@@ -34,8 +38,6 @@ func (c *cpuInfoProvider) GetCPUVendor() (types.CPUVendor, error) {
 		return types.CPUVendorAMD, nil
 	case "ARM":
 		return types.CPUVendorARM, nil
-	case "IBM/S390":
-		return types.CPUVendorS390X, nil
 	}
 
 	return -1, fmt.Errorf("unknown CPU vendor: %s", cpuInfo.Processors[0].Vendor)
